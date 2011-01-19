@@ -1,0 +1,897 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title id='title'>HTML oldal példa ExtJS használatához</title>
+    <link rel="stylesheet" type="text/css" href="../resources/css/ext-all.css" />
+    <link rel="stylesheet" type="text/css" href="menu.css" />
+    <script type="text/javascript" src="../adapter/ext/ext-base.js"></script>    
+    <script type="text/javascript" src="../ext-all-debug.js"></script>  
+	<script type="text/javascript" src="Util.js"></script>
+	<script type="text/javascript" src="ttStore.js"></script>	
+	<style type="text/css">
+	    label.myBold{
+			padding: 3px 3px 3px 3px;
+			vertical-align: middle;
+			height: 22;
+	    }		  
+	</style>
+
+	<script type="text/javascript">	
+	Ext.apply(Ext.form.VTypes, {
+		daterange: function(val, field) {
+			var date = field.parseDate(val);
+			if (!date) {
+				return;
+			}
+			
+			if (field.startDate) {
+				var endId = 'end' + field.pairId;
+				var endField = Ext.getCmp(endId);
+				var date2 = endField.parseDate(endField.getValue());
+				if (!date2) {
+					return true;
+				}
+				var res = (date <= date2);
+				return res;
+			} else if (field.endDate) {
+				var startId = 'start' + field.pairId;
+				var startField = Ext.getCmp(startId);
+				var date2 = startField.parseDate(startField.getValue());
+				if (!date2) {
+					return true;
+				}
+				var res = (date >= date2);
+				return res;
+			}
+			
+			return;
+		},
+		numberrage: function(val, field) {
+			var value = parseInt(val);
+			if (!value) {
+				return;
+			}
+			
+			if (field.startRange) {
+				var endRangeId = 'end' + field.pairId;
+				var endField = Ext.getCmp(endRangeId);
+				var value2 = parseInt(endField.getValue());
+				if (!value2) {
+					return true;
+				}
+				var res = (value <= value2);
+				return res;
+			} else if (field.endRange) {
+				var startRangeId = 'start' + field.pairId;
+				var startField = Ext.getCmp(startRangeId);
+				var value2 = parseInt(startField.getValue());
+				if (!value2) {
+					return true;
+				}
+				var res = value >= value2;
+				return res;
+			}
+			
+			return;
+		},
+		daterangeText: 'A tartomány kezdőérétke nagyobb, mint a végérték',
+		numberrageText: 'A tartomány kezdőérétke nagyobb, mint a végérték',
+	});
+	
+	
+	Ext.onReady(function() {
+	
+		Ext.QuickTips.init();		
+		
+		
+		var pnlHufTransfer = new Ext.Panel({
+			title: 'Forint utalási megbízás',
+			border: false			
+		});	
+			
+		var pnlYellowCheck = new Ext.Panel({
+			title: 'Sárga csekk befizetés',
+			border: false
+		});
+		
+		var pnlAccountHystory = new Ext.Panel({
+				title: 'Számlatörténet',				
+				border: false,
+				items: [
+					{
+						border: false,
+						xtype: 'panel',
+						id: 'hystorySearchW',
+						region: 'north',
+						items: [],
+					},					
+					{
+						border: false,
+						xtype: 'panel',
+						id: 'hystory-list',
+						region: 'center',
+						items: [],
+					}
+				]
+		});	
+
+		function ah(src, arg2) {	
+			if (src === btnHufTransfer) {	    
+				pageHolder.getLayout().setActiveItem('huf');       
+			} else if (src === btnYellowCheck) {
+				pageHolder.getLayout().setActiveItem('yellow');       
+			} else if (src === btnCurrencyTransfer) {
+			} else if (src === btnPermanentTransfer) {
+			} else if (src === btnGroupedCollecting) {
+			} else if (src === btnMobileBallance) {
+			} else if (src === btnHighwayTicket) {
+			} else if (src === btnImportTransaction) {
+			} else if (src === btnAccountHystory) {
+				pageHolder.getLayout().setActiveItem('hystory');
+			}
+			pageHolder.doLayout();
+		}
+		
+		var btnAccountHystory = new Ext.Button({
+			text: 'Számlatörténet',  
+			width: '100%',
+			height: '35',
+			listeners: {
+				click: ah.createDelegate(),
+			}
+		});
+		  
+		var btnHufTransfer = new Ext.Button({
+			text: 'Forint átutalás',  
+			width: '100%',
+			height: '35',
+			listeners: {
+				click: ah.createDelegate(),
+			}
+		});
+	  
+		var btnYellowCheck = new Ext.Button({
+			text: 'Sárga csekk befizetés',
+			width: '100%',
+			height: '35',
+			listeners: {
+				click: ah.createDelegate(),
+			}
+		});
+
+		var btnCurrencyTransfer = new Ext.Button({
+			text: 'Deviza átutalás',	 
+			width: '100%',
+			height: '35',
+			listeners: {
+				click: ah.createDelegate(),
+			}
+		});
+
+		var btnPermanentTransfer = new Ext.Button({
+			text: 'Állandó átutalások',	 
+			width: '100%',
+			height: '35',
+			listeners: {
+				click: ah.createDelegate(),
+			}
+		});
+
+		var btnGroupedCollecting = new Ext.Button({
+			text: 'Csoportos beszedések',	 
+			width: '100%',
+			height: '35',
+			listeners: {
+				click: ah.createDelegate(),
+			}
+		});
+
+		var btnMobileBallance = new Ext.Button({
+			text: 'Mobil-egyenleg feltöltés',	 
+			width: '100%',
+			height: '35',
+			listeners: {
+				click: ah.createDelegate(),
+			}
+		});
+
+		var btnHighwayTicket = new Ext.Button({
+			text: 'Autópálya matrica vásárlás',	 
+			width: '100%',
+			height: '35',
+			listeners: {
+				click: ah.createDelegate(),
+			}
+		});
+	  
+		var btnImportTransaction = new Ext.Button({
+			text: 'Tranzakció importálás',	 
+			width: '100%',
+			height: '35',
+			listeners: {
+				click: ah.createDelegate(),
+			}
+		});
+	  
+		var tblShowAccount = new Ext.Panel({
+			title: 'Számlák áttekintése',
+			layout: 'column',
+			height: '70', 
+			items: [
+				  btnHufTransfer,
+				  btnYellowCheck,
+				  btnCurrencyTransfer,
+				  btnPermanentTransfer,
+				  btnGroupedCollecting,
+				  btnMobileBallance,
+				  btnHighwayTicket,
+				  btnImportTransaction,
+				  btnAccountHystory
+			]
+		}); 	
+
+		var tblTransferAndCashIn = new Ext.Panel({
+			title: 'Átutalás, befizetés'	  
+		});
+
+		var tblOwnFinancialCases = new Ext.Panel({
+			title: 'Személyes pénzügyek'	  
+		});
+
+		var tblCards = new Ext.Panel({
+			title: 'Kártyák'
+		});
+
+		var tblDepositsAndInvestments = new Ext.Panel({
+			title: 'Betétek, befektetések'
+		});
+
+		var tblCredit = new Ext.Panel({
+			title: 'Hitelek'
+		});
+
+		var tblAdministration = new Ext.Panel({
+			title: 'Ügyintézés'
+		});
+      
+		var accordion = new Ext.Panel({
+			region:'west',
+			margins:'5 0 5 5',
+			split:true,
+			width: 210,
+			maxWidth: 210,  
+			minWidth: 210,
+			layout:'accordion',
+			items: [
+				  tblShowAccount, 
+				  tblTransferAndCashIn,
+				  tblOwnFinancialCases, 
+				  tblCards, tblDepositsAndInvestments, 
+				  tblCredit, 
+				  tblAdministration
+			]
+		});
+
+		var pageHolder = new Ext.Panel({
+			layout: 'card',
+			region: 'center',
+			margins:'5 5 5 0',
+			cls: 'empty',
+			items: [
+				{
+					id: 'huf',	      
+					items: [pnlHufTransfer]	      
+				},
+				{
+					id: 'yellow',
+					items: [pnlYellowCheck]
+				}
+				,
+				{
+					id: 'hystory',
+					items: [pnlAccountHystory]
+				}
+			]
+		});
+
+		var viewport = new Ext.Viewport({
+			split: false,
+			layout:'border',
+			items:[
+				accordion, pageHolder	
+			]
+		});				
+					
+		var comboAccount = new Ext.form.ComboBox({
+			store: accountStore,
+			displayField: 'id',
+			name: 'accountItem',
+			blankText: 'Kötelező mező!',
+			allowBlank: false,			
+			width: '250',
+			boxMaxWidth: '250',
+			boxMinWidth: '250',
+			fieldLabel: 'Kiválasztott számlaszám',
+			typeAhead: true,
+			mode: 'local',
+			triggerAction: 'all',
+			emptyText: 'Select a state...',
+			selectOnFocus: true,		
+			style: {
+				width: '233'
+			},
+			listeners: {
+				select: function(s,t,z) {
+					var selected = accountStore.getAt(z);
+					var label = Ext.getCmp('balanceLabel');
+					label.setText('HUF Elérhető egyenleg:' + selected.get('amount') + ' HUF');
+				}
+			}
+		});			
+			
+		var formHufTransfer = new Ext.FormPanel({	
+			width: 600,
+			id: 'hufTransfer',			
+			labelWidth: 180,			
+			bodyStyle:'padding:5px 5px 0',
+			frame: true,
+			border: false,
+			items: [
+				new Ext.Panel({
+					border: false,					
+					title: 'Melyik számláról szeretne utalni?',
+					html: '<br/>'
+				}),
+				comboAccount,				
+				new Ext.Panel({
+					border: false,
+					title: 'Kinek szeretne utalni?',
+					html: '<br/>'
+				}),
+				{
+					xtype: 'textfield',
+					blankText: 'Kötelező mező!',
+					name: 'partnerName',
+					allowBlank: false,					
+					width: 250,
+					fieldLabel: 'Partner neve' 
+				},
+				{
+					xtype: 'textfield',
+					name: 'partnerAccount',	
+					blankText: 'Kötelező mező!',					
+ 					maskRe: /[0-9,-]/i,
+					regex: /\b[0-9]{8}-[0-9]{8}-[0-9]{8}\b/,
+					regexText: 'Hibás kitöltés',
+					allowBlank: false,	
+					width: 250,
+					fieldLabel: 'Partner számlaszáma'
+				},
+				new Ext.Panel({
+					border: false,
+					title: 'Átutalás részletei',
+					html: '<br/>'
+				}),
+				{
+					xtype: 'datefield',
+					format: 'Y.m.d.',
+					minValue: new Date(),
+					minText: 'Az érték nem lehet kisebb a mai dátumnál',
+					name: 'tradeDate',
+					blankText: 'Kötelező mező!',
+					allowBlank: false,
+					fieldLabel: 'Értéknap',
+					width: 100
+				},
+				{
+					layout:'column',
+					items: [{
+						layout: 'form',
+						items:[
+						{
+							xtype: 'textfield',
+							name: 'sum',	
+							blankText: 'Kötelező mező!',
+							allowBlank: false,
+							fieldLabel: 'Összeg',
+							width: 120,
+							listeners: {
+								change: function(t,s) {
+									var str = s.split(' ').join('');
+									if (str.length > 3) {
+										var firstLength = (str.length) % 3;
+										var result = '';
+										result += str.substring(0,firstLength);
+										for (i = firstLength; i < str.length; i=i+3) {
+											result += ' ' + str.substring(i,i+3);
+										}
+										t.setValue(result.trim());
+									}		
+								},
+								focus: function(t) {
+									var str = t.getValue().split(' ').join('');
+									t.setValue(str);
+								}
+							}
+						}]
+						},
+						{
+						layout: 'form',
+						items: [
+						{
+							id: 'balanceLabel',
+							cls:'x-form-item myBold',
+							xtype: 'label',
+							text: 'HUF'
+						}]
+						}
+					]
+				},
+				{
+					xtype: 'textfield',
+					name: 'memo1',
+					width: 250,
+					fieldLabel: 'Megjegyzés',
+				},
+				{
+					xtype: 'textfield',
+					name: 'memo2',
+					width: 250,
+				},
+				{
+					xtype: 'textfield',
+					name: 'memo3',
+					width: 250,
+				}
+			],
+			buttons: [{
+				text: 'Mégsem'
+			},{
+				text: 'Rögzít',
+				handler: function() {
+					Ext.getCmp('hufTransfer').getForm().submit();
+				}
+			}]			
+		});	
+		formHufTransfer.render(pnlHufTransfer.body);
+
+		
+		
+		var filterData = {};
+				
+		function filter(record) {
+			  var blDateFrom = (!filterData.dateFrom) || (record.get('VALUE_DATE') && createDate(record.get('VALUE_DATE')) >= filterData.dateFrom);
+			  var blDateTo = (!filterData.dateTo) || (record.get('VALUE_DATE') && createDate(record.get('VALUE_DATE')) <= filterData.dateTo);			  
+			  var blDirection = (filterData.load == false && filterData.deduction == false) || (filterData.load == true && record.get('AMOUNT') > 0) || (filterData.deduction == true && record.get('AMOUNT') < 0);
+			  var blPartnerName = (!filterData.partnerName) || (record.get('CUST_NAME').startsWith(filterData.partnerName));
+			  var blPartnerAcc =  (!filterData.partnerAccount) || (record.get('CUST_ACC').startsWith(filterData.partnerAccount));
+			  var blTransactionId = (!filterData.transactionId) || (record.get('TRX_ID').startsWith(filterData.transactionId))
+			  var blRemark = (!filterData.remark) || (record.get('TRX_DESCR1').startsWith(filterData.remark)) || (record.get('TRX_DESCR2').startsWith(filterData.remark)) || (record.get('TRX_DESCR3').startsWith(filterData.remark) || (record.get('TRX_DESCR4').startsWith(filterData.remark)));
+			  var blTransactionType = (!filterData.transactionType) || (record.get('TRANS_DESC').startsWith(filterData.transactionType));
+			  var blValueFrom = (!filterData.sumFrom) || (filterData.sumFrom <= record.get('AMOUNT'));
+			  var blValueTo = (!filterData.sumTo) || (filterData.sumTo >= record.get('AMOUNT'));
+			  return blDateFrom && blDateTo && blDirection && blPartnerName && blPartnerAcc && blTransactionId && blRemark && blTransactionType && blValueFrom && blValueTo;
+		}					
+		
+		var hitList = new Ext.grid.GridPanel({
+			store: hystoryDataStore,
+			renderTo:'hystory-list',
+			autoScroll: true,
+			title: 'Találatok',
+			border: true,
+			width: 800,
+			columns: [
+				{
+					header: 'Dátum',
+					dataIndex: 'VALUE_DATE',
+					sortable: true,
+					renderer: dateRenderer,
+					width: 95					
+				},
+				{
+					header: 'Típus',
+					dataIndex: 'TRANS_DESC',
+					sortable: true,
+					width: 300
+				},
+				{
+					header: 'Partner',
+					dataIndex: 'CUST_NAME',
+					sortable: true,
+					width: 300
+				},
+				{
+					header: 'Összeg',
+					dataIndex: 'AMOUNT',
+					sortable: true,
+					type: 'number',
+					width: 100
+				}
+			]
+		});
+		
+			
+
+		var pageSearchHead = new Ext.Panel({
+			layout: 'card',
+			width: 800,
+			renderTo: 'hystorySearchW',
+			border: false,
+			activeItem: 'part',
+			//region: 'north',
+			items: [
+				{
+					id: 'full',
+					items: [
+						{
+							border: false,
+							xtype: 'panel',
+							id: 'hystory-search-full',							
+							items: []
+						}
+					]
+				},
+				{
+					id: 'part',
+					items: [
+						{
+							border: false,
+							xtype: 'panel',
+							id: 'hystory-search',							
+							items: []
+						}
+					]
+				}
+			]
+		});	
+		
+		var hystorySearchForm = new Ext.FormPanel({
+			url: 'search.php',
+			id: 'searchHistoryPart',
+			labelWidth: 180,
+			region : 'north',
+			title: 'Keresési feltételek',
+			renderTo: 'hystory-search',
+			frame: true,
+			items: [
+				{					
+					name: 'searchAccountCombo',
+					xtype: 'combo',
+					fieldLabel: 'Számla',					
+					width: 180
+				},
+				{
+					layout: 'column',						
+					items: [
+						{	
+							width: 310,							
+							layout: 'form',							
+							items: [
+								{
+									id: 'startpsdt',
+									fieldLabel: 'Időintervallum',
+									region : 'center',
+									xtype: 'datefield',
+									name: 'searchDateFrom',
+									vtype: 'daterange',
+									startDate: 'startdt',
+									pairId: 'psdt',
+									format: 'Y.m.d.',
+									width: 120,
+									minValue: new Date("Januar 01, 2009 0:0:01"),
+									minText: 'Az érték nem lehet kisebb 2009.01.01.-nél',
+									maxValue: new Date(),
+									maxText: 'Jövőbeli dátumokra törénő keresés nem lehetséges'									
+								}
+							]
+							
+						},
+						{	
+							xtype: 'label',
+							text: '-',							
+							cls:'x-form-item myBold'
+						},
+						{
+							labelWidth: 1,
+							width: 310,							
+							layout: 'form',							
+							items: [
+								{
+									id: 'endpsdt',
+									region : 'center',
+									xtype: 'datefield',
+									name: 'searchDateTo',									
+									format: 'Y.m.d.',
+									vtype: 'daterange',
+									endDate: 'startdt',
+									pairId: 'psdt',
+									width: 120,
+									minValue: new Date("Januar 01, 2009 0:0:01"),
+									minText: 'Az érték nem lehet kisebb 2009.01.01.-nél',
+									maxValue: new Date(),
+									maxText: 'Jövőbeli dátumokra törénő keresés nem lehetséges'
+								}
+							]
+							
+						}
+					]
+				}				
+			],
+			buttons: [
+				{
+					text: 'Részletes keresés',					
+					handler: function() {
+						pageSearchHead.getLayout().setActiveItem('full');
+					}
+				},
+				{
+					text: 'Keresés',
+					handler: function() {
+						Ext.getCmp('searchHistoryPart').getForm().submit();
+					}
+				}				
+			]
+		});		
+		
+		
+					
+		var hystorySearchFullForm = new Ext.FormPanel({
+			url: 'search.php',
+			id: 'searchHistoryFull',
+			width: 800,
+			renderTo: 'hystory-search-full',
+			labelWidth: 180,
+			region : 'north',
+			title: 'Keresési feltételek',			
+			frame: true,
+			items: [
+				{					
+					name: 'searchAccountCombo',
+					xtype: 'combo',
+					fieldLabel: 'Számla',					
+					width: 275,
+					style: {
+						width: '275'
+					}
+				},
+				{
+					layout: 'column',						
+					items: [
+						{	
+							width: 310,							
+							layout: 'form',							
+							items: [
+								{
+									id: 'startdt',
+									name: 'startdt',
+									xtype: 'datefield',
+									fieldLabel: 'Idő intervallum',
+									width: 120,
+									vtype: 'daterange',
+									startDate: 'startdt',
+									pairId: 'dt',
+									format: 'Y.m.d.',	
+									minValue: new Date("Januar 01, 2009 0:0:01"),
+									minText: 'Az érték nem lehet kisebb 2009.01.01.-nél',
+									maxValue: new Date(),
+									maxText: 'Jövőbeli dátumokra törénő keresés nem lehetséges'
+								}
+							]
+							
+						},
+						{	
+							xtype: 'label',
+							text: '-tól',							
+							cls:'x-form-item myBold'
+						},
+						{
+							labelWidth: 1,
+							width: 130,							
+							layout: 'form',							
+							items: [
+								{
+									name: 'enddt',
+									id: 'enddt',
+									xtype: 'datefield',
+									width: 120,
+									vtype: 'daterange',
+									endDate: 'enddt',
+									pairId: 'dt',
+									format: 'Y.m.d.',
+									minValue: new Date("Januar 01, 2009 0:0:01"),									
+									minText: 'Az érték nem lehet kisebb 2009.01.01.-nél',
+									maxValue: new Date(),
+									maxText: 'Jövőbeli dátumokra törénő keresés nem lehetséges'
+								}
+							]							
+						},
+						{	
+							xtype: 'label',
+							text: '-ig',							
+							cls:'x-form-item myBold'
+						}
+					]
+				},
+				{
+					id: 'transactionType',
+					xtype: 'combo',
+					store: ttStore,
+					name: 'transactionType',
+					displayField: 'name',
+					fieldLabel: 'Tranzakció típus',
+					typeAhead: true,
+					mode: 'local',
+					triggerAction: 'all',
+					//emptyText: 'Select a state...',
+					selectOnFocus: true,		
+					width: 275,
+					style: {
+						width: '275'
+					},					
+				},
+				{
+					layout: 'column',
+					items: [
+						{
+							layout: 'form',
+							items: [
+								{
+									id: 'transactionDirectionLoad', 
+									name: 'transactionDirectionLoad',
+									xtype: 'checkbox',
+									boxLabel: 'Terhelések',
+									fieldLabel: 'Tranzakció iránya'
+								}
+							]
+						},
+						{
+							layout: 'form',
+							labelWidth: 1,
+							items: [
+								{
+									id: 'transactionDirectionDeduct',
+									name: 'transactionDirectionDeduct',
+									xtype: 'checkbox',
+									boxLabel: 'Jóváírások',
+									width: 110,									
+								}
+							]
+						}
+					]
+				},
+				{
+					layout: 'column',
+					items: [
+						{
+							width: 310,
+							layout: 'form',
+							items: [
+								{
+									id: 'startnumVal',
+									name: 'startnumVal',
+									vtype: 'numberrage',
+									startRange: 'startnumVal',
+									pairId: 'numVal',									
+									xtype: 'numberfield',
+									fieldLabel: 'Összeg intervallum',
+									minValue: 0.000001,
+									minText: 'A mező csak 0-nál nagyobb értéket tartalmazhat',
+									width: 120,
+								}
+							]
+						},
+						{
+							xtype: 'label',
+							text: '-tól',							
+							cls:'x-form-item myBold'
+						},
+						{
+							width: 130,
+							labelWidth: 1,
+							layout: 'form',
+							items: [
+								{
+									id: 'endnumVal',
+									name: 'endnumVal',
+									vtype: 'numberrage',
+									endRange: 'endnumVal',
+									xtype: 'numberfield',
+									pairId: 'numVal',									
+									width: 120,
+									minText: 'A mező csak 0-nál nagyobb értéket tartalmazhat',
+									width: 120,
+								}
+							]
+						},
+						{
+							xtype: 'label',
+							text: '-ig, a lekérdezett számlaszám devizanemében.',							
+							cls:'x-form-item myBold'
+						}
+					]
+				},
+				{
+					store: hystoryDataStore,
+					displayField: 'CUST_NAME',
+					triggerAction:'all',
+					typeAhead: true,					
+					mode:'local',
+					minChars:2,
+					forceSelection:false,
+					hideTrigger:true,
+					id: 'searchTargetAccountOwner',
+					name: 'searchTargetAccountOwner',
+					xtype: 'combo',
+					fieldLabel: 'Partner',					
+					width: 275
+				},
+				{
+					id: 'searchTargetAccountNum',
+					name: 'searchTargetAccountNum',
+					xtype: 'textfield',
+					fieldLabel: 'Számlaszám',
+					regex: /^[0-9]{8}([ -]?[0-9]{8}){1,2}$/,
+					width: 275
+				},
+				{
+					id: 'searchTransactionId',
+					name: 'searchTransactionId',
+					xtype: 'textfield',
+					fieldLabel: 'Tranzakció azonosító',
+					width: 275
+				},
+				{
+					id: 'searchTransactionRemark',
+					name: 'searchTransactionRemark',
+					xtype: 'textfield',
+					fieldLabel: 'Közlemény',
+					width: 275
+				}
+			],
+			buttons: [
+				{
+					text: 'Keresés',
+					handler: function() {						
+						var tmpStartDt = Ext.getCmp('startdt');
+						filterData.dateFrom = tmpStartDt.getValue();
+						var tmpEndDt = Ext.getCmp('enddt'); 
+						filterData.dateTo = tmpEndDt.getValue();
+						var tmpDeduction = Ext.getCmp('transactionDirectionLoad');
+						filterData.deduction = tmpDeduction.getValue();
+						var tmpLoad = Ext.getCmp('transactionDirectionDeduct');
+						filterData.load = tmpLoad.getValue();
+						var tmpPartnerName = Ext.getCmp('searchTargetAccountOwner');
+						filterData.partnerName = tmpPartnerName.getValue();
+						var tmpPartnerAccount = Ext.getCmp('searchTargetAccountNum');
+						filterData.partnerAccount = tmpPartnerAccount.getValue();
+						var tmpTransactionId = Ext.getCmp('searchTransactionId');
+						filterData.transactionId = tmpTransactionId.getValue();
+						var tmpRemark = Ext.getCmp('searchTransactionRemark');
+						filterData.remark = tmpRemark.getValue();
+						var tmpTransactionType = Ext.getCmp('transactionType');
+						filterData.transactionType = tmpTransactionType.getValue();
+						var tmpSumFrom = Ext.getCmp('startnumVal');
+						filterData.sumFrom = tmpSumFrom.getValue();
+						var tmpSumTo = Ext.getCmp('endnumVal');
+						filterData.sumTo = tmpSumTo.getValue();
+						hystoryDataStore.filterBy(filter);
+						//Ext.getCmp('searchHistoryFull').getForm().submit();
+					}
+				},
+				{
+					text: 'Egyszerű keresés',
+					handler: function() {						
+						pageSearchHead.getLayout().setActiveItem('part');
+					}
+				}
+			]
+		});
+		
+	});
+	
+	
+	</script>
+  </head>
+  <body>
+  </body>
+</html>
